@@ -108,19 +108,18 @@ def ODC(e):
 def ODCt():
     global voters, image2
     move = TV2.item(TV2.focus(), 'values')[0]
-    
-    
+    i = 0
     while move == TV2.item(TV2.focus(), 'values')[0]:
         print(TV2.item(TV2.focus(), 'values')[0],end='\r')
         for x in voters[move]:
-            name = "thumbnail2.png"
-            try:
-                urllib.request.urlretrieve(x.author.imageUrl, name)
-                img2 = PIL.Image.open(name).resize((20, 20))
-                image2.append(PIL.ImageTk.PhotoImage(img2))
-            except: pass
-
             if not TV3.exists(x.datetime):
+                name = "thumbnail2.png"
+                try:
+                    urllib.request.urlretrieve(x.author.imageUrl, name)
+                    img2 = PIL.Image.open(name).resize((20, 20))
+                    image2.append(PIL.ImageTk.PhotoImage(img2))
+                except: pass
+                
                 TV3.insert(
                     "",
                     'end',
@@ -128,7 +127,9 @@ def ODCt():
                     text="",
                     image=image2[-1],
                     values=(x.author.name,x.datetime),
+                    tag = i % 2
                 )
+                i += 1
                 
     for item in TV3.get_children():
         TV3.delete(item)
@@ -267,6 +268,10 @@ TV3.column("#0", width = 45, stretch = NO, anchor="w")
 TV3.column("Names", minwidth = 0, width = 40, anchor="w")
 TV3.column("Timestamp", minwidth = 0, width = 40, anchor="e")
 TV3.heading("Names", text="Names", anchor=CENTER)
+
+TV3.tag_configure(0, background=accent1c)
+TV3.tag_configure(1, background=accent2c)
+
 
 TV3.pack(side=LEFT, fill="both", padx=7, pady=7, expand=True)
 
