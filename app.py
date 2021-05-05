@@ -14,6 +14,7 @@ voters = defaultdict(list)
 item = ''
 banwords = []
 
+# Function to check for a valid chess move and register it in left and middle pannel
 def register(c):
     global image, votes, voters
     txt = c.message.lower().strip()
@@ -51,6 +52,7 @@ def register(c):
     else:
         pass
 
+# Function to extract url from given link 
 def urlstart():
     global idx, image, chat
     url2 = url.get()
@@ -69,18 +71,21 @@ def urlstart():
         url.set('')
         L2.config(text="Enter Valid URL")
         pass
-    
+
+# threading function for multithreading
 def thread(func):
     t1 = Thread(target=func)
     t1.daemon=True
     t1.start()
 
+# function to start registering
 def chat_update():
     global chat, reset_flag
     while True:
         for c in chat.get().sync_items():
             register(c)
                 
+#tkinter gui bug-fixing
 def fixed_map(option):
     # Returns the style map for 'option' with any styles starting with
     # ("!disabled", "!selected", ...) filtered out
@@ -90,56 +95,64 @@ def fixed_map(option):
     return [elm for elm in style.map("Treeview", query_opt=option)
             if elm[:2] != ("!disabled", "!selected")]
 
+# function to reset the panels
 def reset():
     global votes,voters
     for item in TV2.get_children():
             TV2.delete(item)
     for item in TV.get_children():
             TV.delete(item)
-
+    for item in TV3.get_children():
+            TV3.delete(item)
+            
     votes.clear()
     voters.clear()
 
+# threading function for right panel
 def ODC(e):
     t1 = Thread(target=ODCt)
     t1.daemon=True
     t1.start()
 
+# on-double-click action for a row in left pannel
 def ODCt():
     global voters, image2
     move = TV2.item(TV2.focus(), 'values')[0]
     i = 0
-    while move == TV2.item(TV2.focus(), 'values')[0]:
-        print(TV2.item(TV2.focus(), 'values')[0],end='\r')
-        for x in voters[move]:
-            if not TV3.exists(x.datetime):
-                name = "thumbnail2.png"
-                try:
-                    urllib.request.urlretrieve(x.author.imageUrl, name)
-                    img2 = PIL.Image.open(name).resize((20, 20))
-                    image2.append(PIL.ImageTk.PhotoImage(img2))
-                except: pass
-                
-                TV3.insert(
-                    "",
-                    'end',
-                    iid = x.datetime,
-                    text="",
-                    image=image2[-1],
-                    values=(x.author.name,x.datetime),
-                    tag = i % 2
-                )
-                i += 1
-                
+    try:
+        while move == TV2.item(TV2.focus(), 'values')[0]:
+            for x in voters[move]:
+                if not TV3.exists(x.datetime):
+                    name = "thumbnail2.png"
+                    try:
+                        urllib.request.urlretrieve(x.author.imageUrl, name)
+                        img2 = PIL.Image.open(name).resize((20, 20))
+                        image2.append(PIL.ImageTk.PhotoImage(img2))
+                    except: pass
+
+                    TV3.insert(
+                        "",
+                        'end',
+                        iid = x.datetime,
+                        text="",
+                        image=image2[-1],
+                        values=(x.author.name,x.datetime),
+                        tag = i % 2
+                    )
+                    i += 1
+    except:
+        pass            
     for item in TV3.get_children():
         TV3.delete(item)
 
+# to be developed banning mechanism
 def ban(e):
     global banwords
     banwords.append(TV2.item(TV2.focus(), 'values')[0])
-    
+
 root = tk.Tk()
 
+# Fonts and colour theme configuration
 title_font = font.Font(size=10, family="Calibri", weight="bold")
 body_font = font.Font(size=10, family="Calibri")
 basec = '#f0f0f0'
@@ -149,17 +162,12 @@ accent2c = '#eeeeee'
 font1c = '#010101'
 font2c = '#010101'
 
-root.geometry("900x490")
-root.title("Youtube Chatbot")
-root.configure(padx=5, pady=5, bg= basec)
-
 style = ttk.Style()
 style.map("Treeview", 
           foreground=fixed_map("foreground"),
           background=fixed_map("background"),
           fieldbackground=fixed_map("fieldbackground")
           )
-
 style.configure(
     "Treeview",
     font=body_font,
@@ -169,6 +177,12 @@ style.configure(
     rowheight=27,
 )
 
+# Tkinter window configuration    
+root.geometry("900x490")
+root.title("Youtube Chatbot")
+root.configure(padx=5, pady=5, bg= basec)
+
+# Pane layout configuration
 root.columnconfigure(0, weight=1)
 root.columnconfigure(1, weight=4)
 root.columnconfigure(2, weight=6)
