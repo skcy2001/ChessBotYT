@@ -12,13 +12,14 @@ chat = pytchat.create(video_id=id)
 votes = defaultdict(int)
 voters = defaultdict(list)
 item = ''
+banwords = []
 
 def register(c):
     global image, votes, voters
     txt = c.message.lower().strip()
-    moves = re.findall(
-        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^!.+)",
-        txt,
+    moves = re.findall(# Currently set to any word for testing purposes
+        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^!.+)|([^ ]+)",
+        txt, 
     )
     if(len(moves) > 0):
         san = "".join(moves[0]).strip("!")
@@ -29,25 +30,24 @@ def register(c):
             image.append(PIL.ImageTk.PhotoImage(img))
         except: pass
         votes[san] += 1
-        voters[san].append(c)
-                
+        voters[san].append(c)      
         TV.insert(
             "",
-            "end",
+            0,
             text="",
             image=image[-1],
             values=(c.author.name, san),
             tags=len(image) % 2,
         )
+        
         res = {val[0] : val[1] for val in sorted(votes.items(), key = lambda x: (-x[1], x[0]))}
         
-        for item in TV2.get_children():
-            TV2.delete(item)
-        
-        x = 0
-        for key in res:
-            TV2.insert("","end",text="",value=(key,res[key]), tag = (x % 2))
-            x = x + 1   
+        if not TV2.exists(san):
+            TV2.insert("","end",text="", iid = san, value=(san,res[san]))
+        else:
+            TV2.set(san,'Count',votes[san])
+            if not TV2.index(san) == list(res.keys()).index(san):
+                TV2.move(san, TV2.parent(san), list(res.keys()).index(san))
     else:
         pass
 
@@ -77,7 +77,7 @@ def thread(func):
 
 def chat_update():
     global chat, reset_flag
-    while chat.is_alive():
+    while True:
         for c in chat.get().sync_items():
             register(c)
                 
@@ -107,44 +107,50 @@ def ODC(e):
 
 def ODCt():
     global voters, image2
-    move = TV2.item(TV2.focus(), 'values')
+    move = TV2.item(TV2.focus(), 'values')[0]
     
+    
+    while move == TV2.item(TV2.focus(), 'values')[0]:
+        print(TV2.item(TV2.focus(), 'values')[0],end='\r')
+        for x in voters[move]:
+            name = "thumbnail2.png"
+            try:
+                urllib.request.urlretrieve(x.author.imageUrl, name)
+                img2 = PIL.Image.open(name).resize((20, 20))
+                image2.append(PIL.ImageTk.PhotoImage(img2))
+            except: pass
+
+            if not TV3.exists(x.datetime):
+                TV3.insert(
+                    "",
+                    'end',
+                    iid = x.datetime,
+                    text="",
+                    image=image2[-1],
+                    values=(x.author.name,x.datetime),
+                )
+                
     for item in TV3.get_children():
-            TV3.delete(item)
+        TV3.delete(item)
+
+def ban(e):
+    global banwords
+    banwords.append(TV2.item(TV2.focus(), 'values')[0])
     
-    i=0
-    for x in voters[move[0]]:
-        
-        name = "thumbnail2.png"
-        try:
-            urllib.request.urlretrieve(x.author.imageUrl, name)
-            img2 = PIL.Image.open(name).resize((20, 20))
-            image2.append(PIL.ImageTk.PhotoImage(img2))
-        except: pass
-        
-        TV3.insert(
-            "",
-            "end",
-            text="",
-            image=image2[-1],
-            values=(x.author.name,x.datetime),
-            tags= i % 2,
-        )
-        i=i+1
-                      
 root = tk.Tk()
 
 title_font = font.Font(size=10, family="Calibri", weight="bold")
 body_font = font.Font(size=10, family="Calibri")
-bgd = '#f0f0f0'
-acd = '#ffffff'
-ac3d = '#fefefe'
-ac2d = '#eeeeee'
-fgd = '#010101'
+basec = '#f0f0f0'
+lightc = '#ffffff'
+accent1c = '#fefefe'
+accent2c = '#eeeeee'
+font1c = '#010101'
+font2c = '#010101'
 
 root.geometry("900x490")
 root.title("Youtube Chatbot")
-root.configure(padx=5, pady=5, bg= bgd)
+root.configure(padx=5, pady=5, bg= basec)
 
 style = ttk.Style()
 style.map("Treeview", 
@@ -156,9 +162,9 @@ style.map("Treeview",
 style.configure(
     "Treeview",
     font=body_font,
-    background=acd,
-    foreground=fgd,
-    fieldbackground=acd,
+    background=lightc,
+    foreground=font1c,
+    fieldbackground=lightc,
     rowheight=27,
 )
 
@@ -172,29 +178,29 @@ root.rowconfigure(2, weight=1)
 
 """ PANE 1 STARTs HERE """
 
-pane1 = tk.Frame(root,bg=bgd)
+pane1 = tk.Frame(root,bg=basec)
 pane1.grid(row=0, column=0, columnspan=3, sticky="nsew", pady=2.5,padx=100)
 
 url = StringVar(root)
 
-L2 = tk.Label(pane1, text="", font=body_font, foreground='red',bg=bgd)
+L2 = tk.Label(pane1, text="", font=body_font, foreground='red',bg=basec)
 L2.pack(fill = 'x')
 
-L1 = tk.Label(pane1, text="Enter Video URL:", foreground=fgd,font=title_font,bg=bgd)
+L1 = tk.Label(pane1, text="Enter Video URL:", foreground=font1c,font=title_font,bg=basec)
 L1.pack(side=LEFT)
 
-E1 = tk.Entry(pane1, bd=2, textvariable=url, foreground=fgd,font=body_font,bg=acd)
+E1 = tk.Entry(pane1, bd=2, textvariable=url, foreground=font1c,font=body_font,bg=lightc)
 E1.pack(expand=True, side=LEFT, fill="x",ipady=2,padx=5)
 
-B1 = tk.Button(pane1, text=" Go ", font=body_font, foreground=fgd, command=urlstart,bg=bgd)
+B1 = tk.Button(pane1, text=" Go ", font=body_font, foreground=font1c, command=urlstart,bg=basec)
 B1.pack(side=LEFT,ipady=0)
 
 """ PANE 2 STARTs HERE """
 
-pane2 = tk.Frame(root, relief="groove", bd=2,bg=bgd)
+pane2 = tk.Frame(root, relief="groove", bd=2,bg=basec)
 pane2.grid(row=1, column=0, sticky="nsew", pady=2.5, padx=2.5)
 
-LB3 = tk.Label(pane2,text='Summary',font=title_font, foreground=fgd, bg=bgd)
+LB3 = tk.Label(pane2,text='Summary',font=title_font, foreground=font1c, bg=basec)
 LB3.pack(side=TOP,fill='x')
 
 TV2 = ttk.Treeview(pane2, columns=("Move","Count"), style = 'Treeview', padding=5, show = 'tree')
@@ -204,56 +210,56 @@ TV2.column("Count", minwidth = 0, width = 30, anchor="e")
 TV2.heading("Move", text="Name", anchor=CENTER)
 TV2.bind("<Double-1>", ODC)
 
-TV2.tag_configure(0, background=ac3d)
-TV2.tag_configure(1, background=ac2d)
-
 TV2.pack(side=LEFT, fill="both", padx=7, pady=7, expand=True)
 
-SB2 = Scrollbar(pane2, command=TV2.yview,bg=bgd,activebackground=bgd)
+SB2 = Scrollbar(pane2, command=TV2.yview,bg=basec,activebackground=basec)
 SB2.pack(side=RIGHT, fill="y")
 TV2.config(yscrollcommand=SB2.set)
 
 """ PANE 3 STARTs HERE """
 
-pane3 = tk.Frame(root, relief="groove", bd=2,bg=bgd)
+pane3 = tk.Frame(root, relief="groove", bd=2,bg=basec)
 pane3.grid(row=1, column=1, sticky="nsew", pady=2.5, padx=2.5)
 
-LB2 = tk.Label(pane3,text='Comments',font=title_font, foreground=fgd, bg=bgd)
+LB2 = tk.Label(pane3,text='Comments',font=title_font, foreground=font1c, bg=basec)
 LB2.pack(side=TOP,fill='x')
 
 TV = ttk.Treeview(pane3, columns=("Name", "Message"), style = 'Treeview', padding=5, show = 'tree')
 TV.column("#0", width=45, minwidth = 0, stretch=NO, anchor="e")
 TV.column("Name", width=60, minwidth = 0)
-TV.column("Message", width=35, minwidth = 0, anchor="e", stretch=NO)
+TV.column("Message", width=55, minwidth = 0, anchor="e", stretch=NO)
 TV.heading("Name", text="Name", anchor=CENTER)
 TV.heading("Message", text="Move", anchor=CENTER)
 
 TV.pack(side=LEFT, fill="both", padx=7, pady=7, expand=True)
 
-TV.tag_configure(0, background=ac3d)
-TV.tag_configure(1, background=ac2d)
+TV.tag_configure(0, background=accent1c)
+TV.tag_configure(1, background=accent2c)
 
-SB = Scrollbar(pane3, command=TV.yview,bg=bgd,activebackground=bgd)
+SB = Scrollbar(pane3, command=TV.yview,bg=basec,activebackground=basec)
 SB.pack(side=RIGHT, fill="y")
 TV.config(yscrollcommand=SB.set)
 
 """ PANE 4 STARTs HERE """
 
-pane4 = tk.Frame(root,bg=bgd)
+pane4 = tk.Frame(root,bg=basec)
 pane4.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=2.5, padx=2.5)
 
-B2 = tk.Button(pane4, text="Reset", font=body_font, foreground=fgd, command=reset,bg=bgd)
+B2 = tk.Button(pane4, text="Reset", font=body_font, foreground=font1c, command=reset,bg=basec)
 B2.pack(side=RIGHT,ipady=0,padx = 2)
 
-B3 = tk.Button(pane4, text="Quit", font=body_font, foreground=fgd, command=sys.exit,bg=bgd)
+B3 = tk.Button(pane4, text="Quit", font=body_font, foreground=font1c, command=sys.exit,bg=basec)
 B3.pack(side=RIGHT,ipady=0, padx = 2)
+
+B4 = tk.Button(pane4, text="Ban word", font=body_font, foreground=font1c, command=ban,bg=basec)
+B4.pack(side=RIGHT,ipady=0, padx = 2)
 
 """ PANE 5 STARTs HERE """
 
-pane5 = tk.Frame(root,bg=bgd, bd=2, relief='groove')
+pane5 = tk.Frame(root,bg=basec, bd=2, relief='groove')
 pane5.grid(row=1, column=2, sticky="nsew", pady=2.5, padx=2.5)
 
-LB3 = tk.Label(pane5,text='Commentors',font=title_font, foreground=fgd, bg=bgd)
+LB3 = tk.Label(pane5,text='Commentors',font=title_font, foreground=font1c, bg=basec)
 LB3.pack(side=TOP,fill='x')
 
 TV3 = ttk.Treeview(pane5, columns=("Names","Timestamp"), style = 'Treeview', padding=5, show = 'tree')
@@ -262,12 +268,9 @@ TV3.column("Names", minwidth = 0, width = 40, anchor="w")
 TV3.column("Timestamp", minwidth = 0, width = 40, anchor="e")
 TV3.heading("Names", text="Names", anchor=CENTER)
 
-TV3.tag_configure(0, background=ac3d)
-TV3.tag_configure(1, background=ac2d)
-
 TV3.pack(side=LEFT, fill="both", padx=7, pady=7, expand=True)
 
-SB3 = Scrollbar(pane5, command=TV3.yview,bg=bgd,activebackground=bgd)
+SB3 = Scrollbar(pane5, command=TV3.yview,bg=basec,activebackground=basec)
 SB3.pack(side=RIGHT, fill="y")
 TV3.config(yscrollcommand=SB3.set)
 
