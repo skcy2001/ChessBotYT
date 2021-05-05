@@ -28,6 +28,8 @@
 ## What it does
 
 ChessbotYT is a youtube live-chat bot that can be used to organise polls in live chat. It shows result of the polls, summary of answers, commentors who gave a specific answer.
+Preview:
+![GUI preview](https://github.com/skcy2001/ChessbotYT/blob/master/Preview.png)
 ## Features
 
 ### Built With
