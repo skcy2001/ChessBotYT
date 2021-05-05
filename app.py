@@ -31,7 +31,7 @@ def register(c):
             image.append(PIL.ImageTk.PhotoImage(img))
         except: pass
         votes[san] += 1
-        voters[san].append(c)      
+        voters[san].append(c)     
         TV.insert(
             "",
             0,
@@ -118,6 +118,7 @@ def ODC(e):
 def ODCt():
     global voters, image2
     move = TV2.item(TV2.focus(), 'values')[0]
+    LB3.config(text = f'People who said "{move}"')
     i = 0
     try:
         while move == TV2.item(TV2.focus(), 'values')[0]:
@@ -181,6 +182,7 @@ style.configure(
 root.geometry("900x490")
 root.title("Youtube Chatbot")
 root.configure(padx=5, pady=5, bg= basec)
+root.iconbitmap('Icon.ico')
 
 # Pane layout configuration
 root.columnconfigure(0, weight=1)
@@ -236,7 +238,7 @@ TV2.config(yscrollcommand=SB2.set)
 pane3 = tk.Frame(root, relief="groove", bd=2,bg=basec)
 pane3.grid(row=1, column=1, sticky="nsew", pady=2.5, padx=2.5)
 
-LB2 = tk.Label(pane3,text='Comments',font=title_font, foreground=font1c, bg=basec)
+LB2 = tk.Label(pane3,text='Live feed',font=title_font, foreground=font1c, bg=basec)
 LB2.pack(side=TOP,fill='x')
 
 TV = ttk.Treeview(pane3, columns=("Name", "Message"), style = 'Treeview', padding=5, show = 'tree')
@@ -266,8 +268,8 @@ B2.pack(side=RIGHT,ipady=0,padx = 2)
 B3 = tk.Button(pane4, text="Quit", font=body_font, foreground=font1c, command=sys.exit,bg=basec)
 B3.pack(side=RIGHT,ipady=0, padx = 2)
 
-B4 = tk.Button(pane4, text="Ban word", font=body_font, foreground=font1c, command=ban,bg=basec)
-B4.pack(side=RIGHT,ipady=0, padx = 2)
+#B4 = tk.Button(pane4, text="Ban word", font=body_font, foreground=font1c, command=ban,bg=basec)
+#B4.pack(side=RIGHT,ipady=0, padx = 2)
 
 """ PANE 5 STARTs HERE """
 
