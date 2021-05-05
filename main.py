@@ -19,7 +19,7 @@ def register(c):
     global image, votes, voters
     txt = c.message.lower().strip()
     moves = re.findall(# Currently set to any word for testing purposes
-        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^!.+)|([^ ]+)",
+        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^!.+)",
         txt, 
     )
     if(len(moves) > 0):
