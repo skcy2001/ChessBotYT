@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import font, PhotoImage, ttk 
 from threading import *
 from collections import defaultdict
-import urllib, PIL.Image, PIL.ImageTk, sys, re, pytchat
+import urllib, PIL.Image, PIL.ImageTk, sys, re, pytchat, os
 
 id = "5qap5aO4i9A"
 image = []
@@ -19,7 +19,7 @@ def register(c):
     global image, votes, voters
     txt = c.message.lower().strip()
     moves = re.findall(# Currently set to any word for testing purposes
-        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^!.+)",
+        r"\b([nbrqk])*([a-h])*([1-8])*(x)*([a-h][1-8])+(=[nbrqk])*(\+|#)*|\b(o-o)+(-o)*|(^$.+)|(.)",
         txt, 
     )
     if(len(moves) > 0):
@@ -118,11 +118,15 @@ def ODC(e):
 def ODCt():
     global voters, image2
     move = TV2.item(TV2.focus(), 'values')[0]
+    if LB3['text'] == f'People who said "{move}"':
+        sys.exit()
     LB3.config(text = f'People who said "{move}"')
     i = 0
     try:
         while move == TV2.item(TV2.focus(), 'values')[0]:
             for x in voters[move]:
+                if not move == TV2.item(TV2.focus(), 'values')[0]:
+                    break
                 if not TV3.exists(x.datetime):
                     name = "thumbnail2.png"
                     try:
@@ -268,7 +272,7 @@ B2.pack(side=RIGHT,ipady=0,padx = 2)
 B3 = tk.Button(pane4, text="Quit", font=body_font, foreground=font1c, command=sys.exit,bg=basec)
 B3.pack(side=RIGHT,ipady=0, padx = 2)
 
-#B4 = tk.Button(pane4, text="Ban word", font=body_font, foreground=font1c, command=ban,bg=basec)
+#B4 = tk.Button(pane4, text="Restart", font=body_font, foreground=font1c, command=restart_program,bg=basec)
 #B4.pack(side=RIGHT,ipady=0, padx = 2)
 
 """ PANE 5 STARTs HERE """
